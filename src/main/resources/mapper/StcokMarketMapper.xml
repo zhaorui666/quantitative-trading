@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.StcokMarketMapper">
+
+  <resultMap id="BaseResultMap" type="com.example.pojo.StcokMarket">
+    <id column="code" jdbcType="VARCHAR" property="code" />
+    <id column="date" jdbcType="VARCHAR" property="date" />
+    <result column="lastPrice" jdbcType="VARCHAR" property="lastprice" />
+    <result column="changePercent" jdbcType="VARCHAR" property="changepercent" />
+    <result column="transAmt" jdbcType="VARCHAR" property="transamt" />
+    <result column="amplitude" jdbcType="VARCHAR" property="amplitude" />
+    <result column="beginPrice" jdbcType="VARCHAR" property="beginprice" />
+    <result column="highestPrice" jdbcType="VARCHAR" property="highestprice" />
+    <result column="lowestPrice" jdbcType="VARCHAR" property="lowestprice" />
+    <result column="turnoverRate" jdbcType="VARCHAR" property="turnoverrate" />
+  </resultMap>
+
+  <resultMap id="marketInfoWithStcokBaseInfoResultMap" type="map">
+    <id column="code" jdbcType="VARCHAR" property="code" />
+    <id column="date" jdbcType="VARCHAR" property="date" />
+    <result column="lastPrice" jdbcType="VARCHAR" property="lastprice" />
+    <result column="changePercent" jdbcType="VARCHAR" property="changepercent" />
+    <result column="transAmt" jdbcType="VARCHAR" property="transamt" />
+    <result column="amplitude" jdbcType="VARCHAR" property="amplitude" />
+    <result column="beginPrice" jdbcType="VARCHAR" property="beginprice" />
+    <result column="highestPrice" jdbcType="VARCHAR" property="highestprice" />
+    <result column="lowestPrice" jdbcType="VARCHAR" property="lowestprice" />
+    <result column="turnoverRate" jdbcType="VARCHAR" property="turnoverrate" />
+    <result column="marketValue" jdbcType="VARCHAR" property="marketValue" />
+    <result column="pe" jdbcType="VARCHAR" property="pe" />
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from stock_market
+    where code = #{code,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=VARCHAR}
+  </delete>
+
+  <insert id="insert" parameterType="com.example.pojo.StcokMarket">
+    insert into stock_market (code, `date`, lastPrice, 
+      changePercent, transAmt, amplitude, 
+      beginPrice, highestPrice, lowestPrice, 
+      turnoverRate)
+    values (#{code,jdbcType=VARCHAR}, #{date,jdbcType=VARCHAR}, #{lastprice,jdbcType=VARCHAR}, 
+      #{changepercent,jdbcType=VARCHAR}, #{transamt,jdbcType=VARCHAR}, #{amplitude,jdbcType=VARCHAR}, 
+      #{beginprice,jdbcType=VARCHAR}, #{highestprice,jdbcType=VARCHAR}, #{lowestprice,jdbcType=VARCHAR}, 
+      #{turnoverrate,jdbcType=VARCHAR})
+  </insert>
+
+  <update id="updateByPrimaryKey" parameterType="com.example.pojo.StcokMarket">
+    update stock_market
+    set lastPrice = #{lastprice,jdbcType=VARCHAR},
+      changePercent = #{changepercent,jdbcType=VARCHAR},
+      transAmt = #{transamt,jdbcType=VARCHAR},
+      amplitude = #{amplitude,jdbcType=VARCHAR},
+      beginPrice = #{beginprice,jdbcType=VARCHAR},
+      highestPrice = #{highestprice,jdbcType=VARCHAR},
+      lowestPrice = #{lowestprice,jdbcType=VARCHAR},
+      turnoverRate = #{turnoverrate,jdbcType=VARCHAR}
+    where code = #{code,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=VARCHAR}
+  </update>
+
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select code, `date`, lastPrice, changePercent, transAmt, amplitude, beginPrice, highestPrice, 
+    lowestPrice, turnoverRate
+    from stock_market
+    where code = #{code,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectAllByDateRange" resultMap="marketInfoWithStcokBaseInfoResultMap" parameterType="String">
+    select
+      sm.code, sm.`date`, sm.lastPrice, sm.changePercent, sm.transAmt, sm.amplitude, sm.beginPrice, sm.highestPrice, sm.lowestPrice, sm.turnoverRate,
+      sb.marketValue,sb.pe,sb.name
+    from
+      stock_market sm,
+      stock_base_info sb
+    where
+          sm.code = sb.code
+      and sm.date &gt;= #{begainDate}
+      and sm.date &lt; #{endDate}
+  </select>
+
+  <insert id="batchInsert" parameterType="java.util.List">
+    insert into stock_market
+    (code, date,lastPrice, changePercent, transAmt,amplitude, beginPrice, highestPrice,lowestPrice, turnoverRate)
+    values
+    <foreach collection ="list" item="stockMarket" separator =",">
+      (#{stockMarket.code}, #{stockMarket.date}, #{stockMarket.lastprice}, #{stockMarket.changepercent},
+      #{stockMarket.transamt},#{stockMarket.amplitude}, #{stockMarket.beginprice}, #{stockMarket.highestprice},#{stockMarket.lowestprice},
+      #{stockMarket.turnoverrate})
+    </foreach>
+  </insert>
+
+</mapper>

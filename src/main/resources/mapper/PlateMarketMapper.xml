@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.PlateMarketMapper">
+
+  <resultMap id="BaseResultMap" type="com.example.pojo.PlateMarket">
+    <id column="plate_code" jdbcType="VARCHAR" property="plateCode" />
+    <id column="date" jdbcType="VARCHAR" property="date" />
+    <result column="plate_name" jdbcType="VARCHAR" property="plateName" />
+    <result column="chagne_percent" jdbcType="VARCHAR" property="chagnePercent" />
+    <result column="turnover_rate" jdbcType="VARCHAR" property="turnoverRate" />
+    <result column="trans_amt" jdbcType="VARCHAR" property="transAmt" />
+    <result column="amplitude" jdbcType="VARCHAR" property="amplitude" />
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from plate_market
+    where plate_code = #{plateCode,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=VARCHAR}
+  </delete>
+
+  <insert id="insert" parameterType="com.example.pojo.PlateMarket">
+    insert into plate_market (plate_code, `date`, plate_name, 
+      chagne_percent, turnover_rate, trans_amt, 
+      amplitude)
+    values (#{plateCode,jdbcType=VARCHAR}, #{date,jdbcType=VARCHAR}, #{plateName,jdbcType=VARCHAR}, 
+      #{chagnePercent,jdbcType=VARCHAR}, #{turnoverRate,jdbcType=VARCHAR}, #{transAmt,jdbcType=VARCHAR}, 
+      #{amplitude,jdbcType=VARCHAR})
+  </insert>
+
+  <update id="updateByPrimaryKey" parameterType="com.example.pojo.PlateMarket">
+    update plate_market
+    set plate_name = #{plateName,jdbcType=VARCHAR},
+      chagne_percent = #{chagnePercent,jdbcType=VARCHAR},
+      turnover_rate = #{turnoverRate,jdbcType=VARCHAR},
+      trans_amt = #{transAmt,jdbcType=VARCHAR},
+      amplitude = #{amplitude,jdbcType=VARCHAR}
+    where plate_code = #{plateCode,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=VARCHAR}
+  </update>
+
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select plate_code, `date`, plate_name, chagne_percent, turnover_rate, trans_amt, 
+    amplitude
+    from plate_market
+    where plate_code = #{plateCode,jdbcType=VARCHAR}
+      and `date` = #{date,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectAll" resultMap="BaseResultMap" parameterType="String">
+    select plate_code, `date`, plate_name, chagne_percent, turnover_rate, trans_amt, 
+    amplitude
+    from plate_market where date &gt;= #{begainDate} and date &lt;= #{endDate}
+  </select>
+
+  <insert id="batchInsert" parameterType="java.util.List">
+    insert into plate_market (plate_code, `date`, plate_name, chagne_percent, turnover_rate, trans_amt, amplitude)
+      values
+    <foreach collection ="list" item="plateMarket" separator =",">
+      (#{plateMarket.plateCode}, #{plateMarket.date}, #{plateMarket.plateName}, #{plateMarket.chagnePercent},
+      #{plateMarket.turnoverRate}, #{plateMarket.transAmt},#{plateMarket.amplitude})
+    </foreach>
+  </insert>
+
+</mapper>

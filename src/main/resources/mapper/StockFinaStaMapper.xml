@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.StockFinaStaMapper">
+
+  <resultMap id="BaseResultMap" type="com.example.pojo.StockFinaSta">
+    <id column="code" jdbcType="VARCHAR" property="code" />
+    <id column="report_name" jdbcType="VARCHAR" property="reportName" />
+    <result column="total_revenue" jdbcType="VARCHAR" property="totalRevenue" />
+    <result column="total_revenue_inc" jdbcType="VARCHAR" property="totalRevenueInc" />
+    <result column="ded_non_net_profit" jdbcType="VARCHAR" property="dedNonNetProfit" />
+    <result column="ded_non_net_profit_inc" jdbcType="VARCHAR" property="dedNonNetProfitInc" />
+    <result column="gross_selling_rate" jdbcType="VARCHAR" property="grossSellingRate" />
+    <result column="gross_selling_rate_inc" jdbcType="VARCHAR" property="grossSellingRateInc" />
+    <result column="asset_liab_ratio" jdbcType="VARCHAR" property="assetLiabRatio" />
+    <result column="asset_liab_ratio_inc" jdbcType="VARCHAR" property="assetLiabRatioInc" />
+    <result column="basic_eps" jdbcType="VARCHAR" property="basicEps" />
+    <result column="basic_eps_inc" jdbcType="VARCHAR" property="basicEpsInc" />
+    <result column="date" jdbcType="INTEGER" property="date" />
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from stock_fina_sta
+    where code = #{code,jdbcType=VARCHAR}
+      and report_name = #{reportName,jdbcType=VARCHAR}
+  </delete>
+
+  <insert id="insert" parameterType="com.example.pojo.StockFinaSta">
+    insert into stock_fina_sta (code, report_name, total_revenue, 
+      total_revenue_inc, ded_non_net_profit, ded_non_net_profit_inc, 
+      gross_selling_rate, gross_selling_rate_inc, 
+      asset_liab_ratio, asset_liab_ratio_inc, basic_eps, 
+      basic_eps_inc, `date`)
+    values (#{code,jdbcType=VARCHAR}, #{reportName,jdbcType=VARCHAR}, #{totalRevenue,jdbcType=VARCHAR}, 
+      #{totalRevenueInc,jdbcType=VARCHAR}, #{dedNonNetProfit,jdbcType=VARCHAR}, #{dedNonNetProfitInc,jdbcType=VARCHAR}, 
+      #{grossSellingRate,jdbcType=VARCHAR}, #{grossSellingRateInc,jdbcType=VARCHAR}, 
+      #{assetLiabRatio,jdbcType=VARCHAR}, #{assetLiabRatioInc,jdbcType=VARCHAR}, #{basicEps,jdbcType=VARCHAR}, 
+      #{basicEpsInc,jdbcType=VARCHAR}, #{date,jdbcType=INTEGER})
+  </insert>
+
+  <update id="updateByPrimaryKey" parameterType="com.example.pojo.StockFinaSta">
+    update stock_fina_sta
+    set total_revenue = #{totalRevenue,jdbcType=VARCHAR},
+      total_revenue_inc = #{totalRevenueInc,jdbcType=VARCHAR},
+      ded_non_net_profit = #{dedNonNetProfit,jdbcType=VARCHAR},
+      ded_non_net_profit_inc = #{dedNonNetProfitInc,jdbcType=VARCHAR},
+      gross_selling_rate = #{grossSellingRate,jdbcType=VARCHAR},
+      gross_selling_rate_inc = #{grossSellingRateInc,jdbcType=VARCHAR},
+      asset_liab_ratio = #{assetLiabRatio,jdbcType=VARCHAR},
+      asset_liab_ratio_inc = #{assetLiabRatioInc,jdbcType=VARCHAR},
+      basic_eps = #{basicEps,jdbcType=VARCHAR},
+      basic_eps_inc = #{basicEpsInc,jdbcType=VARCHAR},
+      `date` = #{date,jdbcType=INTEGER}
+    where code = #{code,jdbcType=VARCHAR}
+      and report_name = #{reportName,jdbcType=VARCHAR}
+  </update>
+
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select code, report_name, total_revenue, total_revenue_inc, ded_non_net_profit, ded_non_net_profit_inc, 
+    gross_selling_rate, gross_selling_rate_inc, asset_liab_ratio, asset_liab_ratio_inc, 
+    basic_eps, basic_eps_inc, `date`
+    from stock_fina_sta
+    where code = #{code,jdbcType=VARCHAR}
+      and report_name = #{reportName,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectAll" resultMap="BaseResultMap">
+    select code, report_name, total_revenue, total_revenue_inc, ded_non_net_profit, ded_non_net_profit_inc, 
+    gross_selling_rate, gross_selling_rate_inc, asset_liab_ratio, asset_liab_ratio_inc, 
+    basic_eps, basic_eps_inc, `date`
+    from stock_fina_sta
+  </select>
+
+  <select id="selectByCode" resultMap="BaseResultMap">
+    select code, report_name, total_revenue, total_revenue_inc, ded_non_net_profit, ded_non_net_profit_inc,
+    gross_selling_rate, gross_selling_rate_inc, asset_liab_ratio, asset_liab_ratio_inc,
+    basic_eps, basic_eps_inc, `date`
+    from stock_fina_sta
+    where code = #{code,jdbcType=VARCHAR}  order by date desc
+  </select>
+
+
+  <insert id="batchInsert" parameterType="java.util.List">
+    insert into stock_fina_sta (code, report_name, total_revenue,
+    total_revenue_inc, ded_non_net_profit, ded_non_net_profit_inc,
+    gross_selling_rate, gross_selling_rate_inc,
+    asset_liab_ratio, asset_liab_ratio_inc, basic_eps,
+    basic_eps_inc, `date`)
+    values
+    <foreach collection="list" item="stockFinaSta" separator=",">
+      (#{stockFinaSta.code,jdbcType=VARCHAR}, #{stockFinaSta.reportName,jdbcType=VARCHAR}, #{stockFinaSta.totalRevenue,jdbcType=VARCHAR},
+      #{stockFinaSta.totalRevenueInc,jdbcType=VARCHAR}, #{stockFinaSta.dedNonNetProfit,jdbcType=VARCHAR}, #{stockFinaSta.dedNonNetProfitInc,jdbcType=VARCHAR},
+      #{stockFinaSta.grossSellingRate,jdbcType=VARCHAR}, #{stockFinaSta.grossSellingRateInc,jdbcType=VARCHAR},
+      #{stockFinaSta.assetLiabRatio,jdbcType=VARCHAR}, #{stockFinaSta.assetLiabRatioInc,jdbcType=VARCHAR},
+      #{stockFinaSta.basicEps,jdbcType=VARCHAR}, #{stockFinaSta.basicEpsInc,jdbcType=VARCHAR},#{stockFinaSta.date,jdbcType=INTEGER}
+      )
+    </foreach>
+  </insert>
+</mapper>
