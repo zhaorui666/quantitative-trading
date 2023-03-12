@@ -1,23 +1,24 @@
-package com.example.service;
+package com.example.threadService;
 
-import com.example.pojo.StcokMarket;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.example.service.MarketService;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-public class QueryThread implements  Callable<List<Map<String, Object>>>{
+/**
+ *
+ * 行情数据加载，从而进行处理筛选
+ */
+public class MarketDateQueryThread implements  Callable<List<Map<String, Object>>>{
 
     private MarketService marketService;
     private String begainDate;
     private String endDate;
 
-    public QueryThread(){}
+    public MarketDateQueryThread(){}
 
-    public QueryThread(String begainDate,String endDate,MarketService marketService){
+    public MarketDateQueryThread(String begainDate, String endDate, MarketService marketService){
         this.begainDate=begainDate;
         this.endDate=endDate;
         this.marketService = marketService;
