@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -283,7 +284,7 @@ public class MarketService {
 
             HttpGet httpGet = new HttpGet("https://stock.xueqiu.com/v5/stock/finance/cn/indicator.json?symbol=" + stockBaseInfo.getCode() + "&type=all&is_detail=true&count=" + count + "&timestamp=" + LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
 
-            httpGet.setHeader("Cookie", "xqat=6f2a74dcaf567c87c45208248c683353242d4781;");
+            httpGet.setHeader("Cookie", Constants.Cookie);
 
             //Thread.currentThread().sleep(100);
 
@@ -417,7 +418,7 @@ public class MarketService {
 
             HttpGet httpGet = new HttpGet("https://push2his.eastmoney.com/api/qt/stock/kline/get?cb=jQuery112401976117106249089_1628907633892&secid=90." + plateInfo.getPalteCode() + "&ut=fa5fd1943c7b386f172d6893dbfba10b&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61&klt=101&fqt=0&beg=" + beg + "&end=" + curDatreStr + "&_=1628907633896");
 
-            httpGet.setHeader("Cookie", "xqat=0de231800ecb3f75e824dc0a23866218ead61a8e;");
+            httpGet.setHeader("Cookie", Constants.Cookie);
 
             //Thread.currentThread().sleep(100);
 
@@ -593,7 +594,7 @@ public class MarketService {
 
         List<List<Map<String, Object>>> totalGatherList = new ArrayList<>();
 
-        if (futures != null && futures.size() > 0) {
+        if (!CollectionUtils.isEmpty(futures)) {
 
             for (Future<List<Map<String, Object>>> future : futures) {
                 totalGatherList.add(future.get());

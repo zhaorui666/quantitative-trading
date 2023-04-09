@@ -23,8 +23,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  *
@@ -58,7 +56,7 @@ public class MarketDateInsertThread implements  Runnable{
 
             HttpGet httpGet = new HttpGet("https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=" + stockBaseInfo.getCode() + "&begin=" + LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() + "&period=day&type=before&count=-" + count + "&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance");
 
-            httpGet.setHeader("Cookie", "xqat=7da3658c0a79fd9ef135510bc5189429ce0e3035;");
+            httpGet.setHeader("Cookie", Constants.Cookie);
 
             //Thread.currentThread().sleep(100);
 
@@ -131,22 +129,9 @@ public class MarketDateInsertThread implements  Runnable{
                     BigDecimal turnoverRate = (BigDecimal) dayArray.get(8);
 
                     //成交额
-                    if (dayArray.get(9) instanceof Integer) {
-                        Integer transAmt = (Integer) dayArray.get(9);
-                        item.setTransamt(transAmt.toString());
-                    }
+                    Object transAmt = dayArray.get(9);
 
-                    if (dayArray.get(9) instanceof Long) {
-                        Long transAmt = (Long) dayArray.get(9);
-                        item.setTransamt(transAmt.toString());
-                    }
-
-                    if (dayArray.get(9) instanceof BigDecimal) {
-                        BigDecimal transAmt = (BigDecimal) dayArray.get(9);
-                        transAmt = transAmt.setScale(0, BigDecimal.ROUND_HALF_UP);
-                        item.setTransamt(transAmt.toString());
-                    }
-
+                    item.setTransamt(transAmt.toString());
                     item.setCode(stockCode);
                     item.setLastprice(lastPrice.toString());
                     item.setChangepercent(changePercent.toString());
