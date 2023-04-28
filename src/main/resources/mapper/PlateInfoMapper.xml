@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.mapper.PlateInfoMapper">
+<mapper namespace="com.zr.mapper.PlateInfoMapper">
 
-  <resultMap id="BaseResultMap" type="com.example.pojo.PlateInfo">
+  <resultMap id="BaseResultMap" type="com.zr.pojo.PlateInfo">
     <result column="palte_code" jdbcType="VARCHAR" property="palteCode" />
     <result column="palte_name" jdbcType="VARCHAR" property="palteName" />
   </resultMap>
 
-  <insert id="insert" parameterType="com.example.pojo.PlateInfo">
+  <insert id="insert" parameterType="com.zr.pojo.PlateInfo">
     insert into plate_info (palte_code, palte_name)
     values (#{palteCode,jdbcType=VARCHAR}, #{palteName,jdbcType=VARCHAR})
   </insert>

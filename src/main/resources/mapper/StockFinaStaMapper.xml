@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.mapper.StockFinaStaMapper">
+<mapper namespace="com.zr.mapper.StockFinaStaMapper">
 
-  <resultMap id="BaseResultMap" type="com.example.pojo.StockFinaSta">
+  <resultMap id="BaseResultMap" type="com.zr.pojo.StockFinaSta">
     <id column="code" jdbcType="VARCHAR" property="code" />
     <id column="report_name" jdbcType="VARCHAR" property="reportName" />
     <result column="total_revenue" jdbcType="VARCHAR" property="totalRevenue" />
@@ -24,7 +24,7 @@
       and report_name = #{reportName,jdbcType=VARCHAR}
   </delete>
 
-  <insert id="insert" parameterType="com.example.pojo.StockFinaSta">
+  <insert id="insert" parameterType="com.zr.pojo.StockFinaSta">
     insert into stock_fina_sta (code, report_name, total_revenue, 
       total_revenue_inc, ded_non_net_profit, ded_non_net_profit_inc, 
       gross_selling_rate, gross_selling_rate_inc, 
@@ -37,7 +37,7 @@
       #{basicEpsInc,jdbcType=VARCHAR}, #{date,jdbcType=INTEGER})
   </insert>
 
-  <update id="updateByPrimaryKey" parameterType="com.example.pojo.StockFinaSta">
+  <update id="updateByPrimaryKey" parameterType="com.zr.pojo.StockFinaSta">
     update stock_fina_sta
     set total_revenue = #{totalRevenue,jdbcType=VARCHAR},
       total_revenue_inc = #{totalRevenueInc,jdbcType=VARCHAR},

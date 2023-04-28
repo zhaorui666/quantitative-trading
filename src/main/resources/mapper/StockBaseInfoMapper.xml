@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.mapper.StockBaseInfoMapper">
-  <resultMap id="BaseResultMap" type="com.example.pojo.StockBaseInfo">
+<mapper namespace="com.zr.mapper.StockBaseInfoMapper">
+  <resultMap id="BaseResultMap" type="com.zr.pojo.StockBaseInfo">
     <result column="code" jdbcType="VARCHAR" property="code" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="marketValue" jdbcType="VARCHAR" property="marketvalue" />
     <result column="pe" jdbcType="VARCHAR" property="pe" />
   </resultMap>
-  <insert id="insert" parameterType="com.example.pojo.StockBaseInfo">
+  <insert id="insert" parameterType="com.zr.pojo.StockBaseInfo">
     insert into stock_base_info (code, `name`, marketValue, 
       pe)
     values (#{code,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{marketvalue,jdbcType=VARCHAR}, 

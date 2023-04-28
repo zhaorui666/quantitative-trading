@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.mapper.PlateMarketMapper">
+<mapper namespace="com.zr.mapper.PlateMarketMapper">
 
-  <resultMap id="BaseResultMap" type="com.example.pojo.PlateMarket">
+  <resultMap id="BaseResultMap" type="com.zr.pojo.PlateMarket">
     <id column="plate_code" jdbcType="VARCHAR" property="plateCode" />
     <id column="date" jdbcType="VARCHAR" property="date" />
     <result column="plate_name" jdbcType="VARCHAR" property="plateName" />
@@ -18,7 +18,7 @@
       and `date` = #{date,jdbcType=VARCHAR}
   </delete>
 
-  <insert id="insert" parameterType="com.example.pojo.PlateMarket">
+  <insert id="insert" parameterType="com.zr.pojo.PlateMarket">
     insert into plate_market (plate_code, `date`, plate_name, 
       chagne_percent, turnover_rate, trans_amt, 
       amplitude)
@@ -27,7 +27,7 @@
       #{amplitude,jdbcType=VARCHAR})
   </insert>
 
-  <update id="updateByPrimaryKey" parameterType="com.example.pojo.PlateMarket">
+  <update id="updateByPrimaryKey" parameterType="com.zr.pojo.PlateMarket">
     update plate_market
     set plate_name = #{plateName,jdbcType=VARCHAR},
       chagne_percent = #{chagnePercent,jdbcType=VARCHAR},
