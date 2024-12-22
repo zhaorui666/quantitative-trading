@@ -1,4 +1,4 @@
-package com.zr.concurrentTest;
+package com.zr;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,8 +17,8 @@ public class ConcurrentTest {
         ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
         ReentrantReadWriteLock.ReadLock readLock = reentrantReadWriteLock.readLock();
         ReentrantReadWriteLock.WriteLock writeLock = reentrantReadWriteLock.writeLock();
-        readLock.lock();
-        writeLock.lock();
+//        readLock.lock();
+//        writeLock.lock();
     }
 
     @Test
