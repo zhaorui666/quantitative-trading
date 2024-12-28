@@ -1,29 +1,50 @@
 package com.zr;
 
+import org.aopalliance.intercept.MethodInvocation;
+import org.aspectj.lang.annotation.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.cglib.proxy.Enhancer;
 import org.mockito.cglib.proxy.MethodInterceptor;
 import org.mockito.cglib.proxy.MethodProxy;
+import org.springframework.aop.Advisor;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
+import org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.CommonAnnotationBeanPostProcessor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ConfigurationClassPostProcessor;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class AopTest {
 
-
     static class Target {
         public void foo() {
             System.out.println("target foo....");
+        }
+
+        Target() {
+            System.out.println("Target()");
+        }
+
+        @PostConstruct
+        public void init () {
+            System.out.println("Target init");
         }
     }
 
@@ -105,5 +126,77 @@ public class AopTest {
         Target proxy = (Target) proxyFactory.getProxy();
         proxy.foo();
         System.out.println(proxy.getClass()); //class com.zr.AopTest$Target$$EnhancerBySpringCGLIB$$d2589267
+    }
+
+//    @Aspect
+    static class AspectTest {
+        @Before("execution(* foo())")
+        public void before() {
+            System.out.println("foo before...");
+        }
+    }
+
+    @Configuration
+    static class AdvisorConfig {
+
+        @Bean
+        public Advisor advisor(org.aopalliance.intercept.MethodInterceptor methodInterceptor) throws NoSuchMethodException {
+            AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+            pointcut.setExpression("execution(* foo())");
+            return new DefaultPointcutAdvisor(pointcut, methodInterceptor);
+        }
+
+        @Bean
+        public org.aopalliance.intercept.MethodInterceptor methodInterceptor() {
+            return new org.aopalliance.intercept.MethodInterceptor() {
+                @Nullable
+                @Override
+                public Object invoke(@Nonnull MethodInvocation invocation) throws Throwable {
+                    System.out.println("methodInterceptor before");
+                    Object result = invocation.proceed();
+                    System.out.println("methodInterceptor after");
+                    return result;
+                }
+            };
+        }
+
+        @Bean
+        public Target target() {
+            return new Target();
+        }
+
+        @Bean
+        ConfigurationClassPostProcessor configurationClassPostProcessor() {
+            return new ConfigurationClassPostProcessor();
+        }
+
+        @Bean
+        CommonAnnotationBeanPostProcessor commonAnnotationBeanPostProcessor() {
+            return new CommonAnnotationBeanPostProcessor();
+        }
+
+        @Bean
+        AnnotationAwareAspectJAutoProxyCreator annotationAwareAspectJAutoProxyCreator() {
+            return new AnnotationAwareAspectJAutoProxyCreator();
+        }
+    }
+
+    public static void main(String[] args) {
+        GenericApplicationContext context = new GenericApplicationContext();
+        context.registerBean("advisorConfig", AdvisorConfig.class);
+        context.registerBean(ConfigurationClassPostProcessor.class);
+        context.refresh();
+
+        //aspectTest
+        //advisorConfig
+        //org.springframework.context.annotation.ConfigurationClassPostProcessor
+        //org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
+        //advisor
+        //methodInterceptor
+        Arrays.asList(context.getBeanDefinitionNames()).forEach(f -> System.out.println(f));
+
+        Target target = context.getBean(Target.class);
+        System.out.println(target.getClass());
+        target.foo();
     }
 }
