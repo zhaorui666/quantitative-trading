@@ -1,7 +1,8 @@
-package com.zr;
+package com.zr.aoptest;
 
+import com.zr.Foo;
+import com.zr.Target;
 import org.aopalliance.intercept.MethodInvocation;
-import org.aspectj.lang.annotation.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.cglib.proxy.Enhancer;
@@ -15,7 +16,6 @@ import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.CommonAnnotationBeanPostProcessor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ConfigurationClassPostProcessor;
 import org.springframework.context.support.GenericApplicationContext;
@@ -25,29 +25,60 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
+/**
+ *  JDK代理 代理类和目标类必须实现同一个接口
+ *  Cglib代理 目标类必须可派生子类
+ */
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class AopTest {
 
-    static class Target {
-        public void foo() {
-            System.out.println("target foo....");
-        }
+    @Test
+    public void jdkProxyTest() {
 
-        Target() {
-            System.out.println("Target()");
-        }
+        Target target = new Target();
+        ClassLoader loader = this.getClass().getClassLoader();
 
-        @PostConstruct
-        public void init () {
-            System.out.println("Target init");
-        }
+        Foo proxy = (Foo)Proxy.newProxyInstance(loader, new Class[]{Foo.class}, new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                System.out.println(proxy.getClass()); //class com.zr.$Proxy29
+                System.out.println("before ...");
+                method.invoke(target, args);
+                return null;
+            }
+        });
+
+        //before ...
+        //target foo....
+        proxy.foo();
     }
 
+    @Test
+    public void simulateJdkProxy () {
+
+        Target target = new Target();
+
+        Foo proxy = new $Proxy0(new InvocationHandler() {
+            //实际上invoke方法参数均由代理类进行指定
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                System.out.println("simulate before ...");
+                //使用反射调用,但jdk也存在优化处理。即调用达到一定次数时转换为静态方法调用
+                Object res = method.invoke(target);
+                return res;
+            }
+        });
+
+        //simulate before ...
+        //target foo....
+        proxy.foo();
+    }
 
     @Test
     public void cglibProxyTest() {
@@ -58,24 +89,26 @@ public class AopTest {
             public Object intercept(Object enhancer, Method  method, Object[] objects, MethodProxy methodProxy) throws Throwable {
                 System.out.println("before enhancer ....");
 //                method.invoke(target, args);//反射
-                Object result = methodProxy.invoke(target, null);//未使用反射
-//                Object result = methodProxy.invokeSuper(enhancer, args);
+                Object result = methodProxy.invoke(target, null);//未使用反射，结合目标类使用
+//                Object result = methodProxy.invokeSuper(enhancer, args);//未使用反射，结合代理对象使用
                 System.out.println("after enhancer ....");
-                System.out.println(enhancer.getClass());
+                System.out.println("enhancer.getClass() is ----------------->" + enhancer.getClass()); //class com.zr.Target$$EnhancerByCGLIB$$8daf5ad9
                 return result;
             }
         });
 
-        System.out.println(proxy.getClass());
+        System.out.println("proxy.getClass() is ----------------->" + proxy.getClass()); //class com.zr.Target$$EnhancerByCGLIB$$8daf5ad9
+        //before enhancer ....
+        //target foo....
+        //after enhancer ....
         proxy.foo();
     }
 
-
     @Test
     public void aopOriginCode() throws NoSuchMethodException {
-        //切点
+        //定义切点
         AspectJExpressionPointcut pointcut1 = new AspectJExpressionPointcut();
-        pointcut1.setExpression("execution(* foo())");
+        pointcut1.setExpression("execution(* com.zr.Target.foo())");
         System.out.println(pointcut1.matches(Target.class.getMethod("foo"), Target.class));
 
         AspectJExpressionPointcut pointcut2 = new AspectJExpressionPointcut();
@@ -87,7 +120,7 @@ public class AopTest {
             public boolean matches(Method method, Class<?> targetClass) {
                 MergedAnnotations mergedAnnotations = MergedAnnotations.from(method);
                 if (mergedAnnotations.isPresent(Transactional.class)) {
-//                    return true;
+                    return true;
                 }
 
                 mergedAnnotations = MergedAnnotations.from(Target.class, MergedAnnotations.SearchStrategy.TYPE_HIERARCHY);
@@ -101,7 +134,7 @@ public class AopTest {
         System.out.println(pointcut3.matches(Target.class.getMethod("foo"), Target.class));
 
 
-        //通知 ---> MethodInterceptor extend Advice 继承通知接口
+        //定义通知 ---> MethodInterceptor extend Advice 继承通知接口
         org.aopalliance.intercept.MethodInterceptor methodInterceptor = invocation -> {
             System.out.println("before....");
             Object result = invocation.proceed();
@@ -109,8 +142,7 @@ public class AopTest {
             return result;
         };
 
-        //切面 = 切点 + 通知
-        //advisor通知者，通常持有一个advice
+        //定义切面 = 切点 + 通知.    advisor通知者，通常持有一个advice
         DefaultPointcutAdvisor pointcutAdvisor = new DefaultPointcutAdvisor(pointcut1, methodInterceptor);
 
         Target target = new Target();
@@ -119,21 +151,36 @@ public class AopTest {
         proxyFactory.setTarget(target);
         //Set whether to proxy the target class directly, instead of just proxying specific interfaces. Default is "false".
         //设置是否直接代理目标类，而不是仅代理目标接口。默认为false。如果直接代理目标类，则固定使用cglib代理
-        //如果为false，则目标实现接口则使用jdk代理，否则使用cglib代理
+        //如果为false，则目标实现接口则尝试使用jdk代理(注意：仅为尝试，具体是否可以使用jdk代理取决于jdk代理硬性条件)，否则使用cglib代理
         proxyFactory.setProxyTargetClass(true);
         proxyFactory.setInterfaces(target.getClass().getInterfaces());
         proxyFactory.addAdvisor(pointcutAdvisor);
         Target proxy = (Target) proxyFactory.getProxy();
         proxy.foo();
-        System.out.println(proxy.getClass()); //class com.zr.AopTest$Target$$EnhancerBySpringCGLIB$$d2589267
+        System.out.println(proxy.getClass()); //class com.zr.aoptest.AopTest$Target$$EnhancerBySpringCGLIB$$d2589267
     }
 
-//    @Aspect
-    static class AspectTest {
-        @Before("execution(* foo())")
-        public void before() {
-            System.out.println("foo before...");
-        }
+    @Test
+    public void contextTest() {
+        GenericApplicationContext context = new GenericApplicationContext();
+        context.registerBean("advisorConfig", AdvisorConfig.class);
+        context.registerBean(ConfigurationClassPostProcessor.class);
+        context.refresh();
+
+        //advisorConfig
+        //org.springframework.context.annotation.ConfigurationClassPostProcessor
+        //advisor
+        //methodInterceptor
+        //target
+        //annotationAwareAspectJAutoProxyCreator
+        Arrays.asList(context.getBeanDefinitionNames()).forEach(f -> System.out.println(f));
+
+        Target target = context.getBean(Target.class);
+        System.out.println(target.getClass());//class com.zr.Target$$EnhancerBySpringCGLIB$$6ae6f727
+        //methodInterceptor before
+        //target foo....
+        //methodInterceptor after
+        target.foo();
     }
 
     @Configuration
@@ -165,38 +212,10 @@ public class AopTest {
             return new Target();
         }
 
-        @Bean
-        ConfigurationClassPostProcessor configurationClassPostProcessor() {
-            return new ConfigurationClassPostProcessor();
-        }
-
-        @Bean
-        CommonAnnotationBeanPostProcessor commonAnnotationBeanPostProcessor() {
-            return new CommonAnnotationBeanPostProcessor();
-        }
-
+        //自动创建代理类
         @Bean
         AnnotationAwareAspectJAutoProxyCreator annotationAwareAspectJAutoProxyCreator() {
             return new AnnotationAwareAspectJAutoProxyCreator();
         }
-    }
-
-    public static void main(String[] args) {
-        GenericApplicationContext context = new GenericApplicationContext();
-        context.registerBean("advisorConfig", AdvisorConfig.class);
-        context.registerBean(ConfigurationClassPostProcessor.class);
-        context.refresh();
-
-        //aspectTest
-        //advisorConfig
-        //org.springframework.context.annotation.ConfigurationClassPostProcessor
-        //org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
-        //advisor
-        //methodInterceptor
-        Arrays.asList(context.getBeanDefinitionNames()).forEach(f -> System.out.println(f));
-
-        Target target = context.getBean(Target.class);
-        System.out.println(target.getClass());
-        target.foo();
     }
 }
