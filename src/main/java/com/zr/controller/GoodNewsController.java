@@ -1,8 +1,8 @@
 package com.zr.controller;
 
 import com.google.common.collect.Lists;
-import com.zr.service.MarketService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.zr.annotation.CurrentLimiter;
+import com.zr.constant.LimitType;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,17 +15,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @RestController
 public class GoodNewsController {
 
     @RequestMapping("/getGoodNews")
+    @CurrentLimiter(limit = 2, expire = 60, limitType = LimitType.IP)
     public void insertMarketData() throws IOException, InterruptedException {
         List<String> contentList = new ArrayList<>();
 

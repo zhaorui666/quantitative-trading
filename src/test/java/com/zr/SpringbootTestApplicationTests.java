@@ -14,9 +14,6 @@ import java.util.concurrent.Executors;
 @SpringBootTest
 public class SpringbootTestApplicationTests {
 
-    @Autowired
-    private NamedParameterJdbcTemplate jdbcTemplate;
-
     @Test
     public void contextLoads() {
         Date curDate = new Date();

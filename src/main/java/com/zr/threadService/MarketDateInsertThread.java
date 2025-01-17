@@ -54,7 +54,7 @@ public class MarketDateInsertThread implements  Runnable{
 
         for (StockBaseInfo stockBaseInfo: stockBaseInfoList) {
 
-            HttpGet httpGet = new HttpGet("https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=" + stockBaseInfo.getCode() + "&begin=" + LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() + "&period=day&type=before&count=-" + count + "&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance");
+            HttpGet httpGet = new HttpGet("https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=" + stockBaseInfo.getCode() + "&begin=" + LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() + "&period=day&type=before&count=-" + count + "&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance&md5__1632=eqAxyDBmitKYu405DIB0DIx7qAIx488222bD");
 
             httpGet.setHeader("Cookie", Constants.Cookie);
 

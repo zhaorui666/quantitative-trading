@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 /**
@@ -218,4 +219,26 @@ public class AopTest {
             return new AnnotationAwareAspectJAutoProxyCreator();
         }
     }
+
+    @Test
+    public void threadLocalTest(){
+        ThreadLocal<SimpleDateFormat> df = ThreadLocal.withInitial( () -> new SimpleDateFormat(""));
+        df.remove();
+
+        ThreadLocal threadLocal = new ThreadLocal();
+        threadLocal.set("123");
+
+        ThreadLocal threadLocal1 = new ThreadLocal();
+        threadLocal1.set("123");
+
+        System.out.println(threadLocal.get());
+
+        int i = 16 & (16 - 1);
+        int j = 16 % 16;
+        System.out.println("i ==================:" + i);
+        System.out.println("j ==================:" + j);
+
+    }
+
+
 }

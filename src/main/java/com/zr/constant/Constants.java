@@ -6,5 +6,5 @@ public class Constants {
 
     public static final int CPU_COUNT = 8;
 
-    public static final String Cookie = "xqat=6f2a74dcaf567c87c45208248c683353242d4781;";
+    public static final String Cookie = "xqat=511bf5034992327eaaacb9d6ff05888641f2c88a;";
 }

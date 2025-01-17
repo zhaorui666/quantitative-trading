@@ -82,7 +82,10 @@ public class ApplicationEventTest {
 //        return multicaster;
 //    }
 
-    //覆盖容器中 ApplicationEventMulticaster 广播器, 使用自定义逻辑进行发布
+    /**
+     * 覆盖容器中 ApplicationEventMulticaster的默认实现类 广播器, 使用自定义逻辑进行发布
+     * 可以是作为事件监听器、发布器的总管中介。用以协调发布--->监听
+     */
     @Bean
     public ApplicationEventMulticaster applicationEventMulticaster(ConfigurableApplicationContext context) {
         List<ApplicationListener> listeners = new ArrayList<>();

@@ -1,4 +1,4 @@
-package com.zr;
+package com.zr.basetest;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +34,9 @@ public class ConcurrentTest {
         df.remove();
 
         ThreadLocal threadLocal = new ThreadLocal();
+        threadLocal.set(123);
+        threadLocal.set(456);
+        System.out.println(threadLocal.get());
     }
 
 }
