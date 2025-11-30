@@ -1,5 +1,7 @@
 package com.zr.controller;
 
+import com.zr.annotation.CurrentLimiter;
+import com.zr.constant.LimitType;
 import com.zr.service.MarketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +17,7 @@ public class MarketController {
     @Autowired
     private MarketService service;
 
+    @CurrentLimiter(limit = 2, expire = 60, limitType = LimitType.IP)
     @RequestMapping("/insertMarketData")
     public void insertMarketData() throws IOException, InterruptedException {
         service.insertMarketData();
@@ -43,5 +46,10 @@ public class MarketController {
     @RequestMapping("/countPlateResult")
     public void countPlateResult() throws IOException {
         service.countPlateResult();
+    }
+
+    @RequestMapping("/selectTest")
+    public void selectTest() throws IOException {
+        service.selectTest();
     }
 }

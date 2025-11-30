@@ -1,0 +1,1 @@
+DELETE FROM stock_base_info;

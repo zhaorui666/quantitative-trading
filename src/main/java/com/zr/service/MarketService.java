@@ -687,4 +687,8 @@ public class MarketService {
         return result;
 
     }
+
+    public void selectTest() {
+        stockBaseInfoMapper.selectAll();
+    }
 }

@@ -25,7 +25,7 @@ public class GoodNewsController {
 
     @RequestMapping("/getGoodNews")
     @CurrentLimiter(limit = 2, expire = 60, limitType = LimitType.IP)
-    public void insertMarketData() throws IOException, InterruptedException {
+    public void getGoodNews() throws IOException, InterruptedException {
         List<String> contentList = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader("喜报文案.txt"))) {
@@ -34,12 +34,14 @@ public class GoodNewsController {
                 contentList.add(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("-------------请确保文案文件名称为'喜报文案.txt'!-------------");
+            return;
         }
 
         contentList = contentList.stream().filter(f -> !StringUtils.isEmpty(f)).collect(Collectors.toList());
 
         if (CollectionUtils.isEmpty(contentList) || contentList.size() % 5 != 0) {
+            System.out.println("-------------请确保每条喜报五行一条，且每条喜报需回车分隔!-------------");
             return;
         }
 
@@ -74,7 +76,8 @@ public class GoodNewsController {
                 System.out.println("Text added to image successfully!");
 
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("-------------请确保喜报图片模板名称为'input.jpg'!-------------");
+                return;
             }
         }
     }

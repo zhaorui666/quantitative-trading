@@ -3,6 +3,7 @@ package com.zr.aoptest;
 import com.zr.Foo;
 import com.zr.Target;
 import org.aopalliance.intercept.MethodInvocation;
+import org.aspectj.lang.annotation.Pointcut;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.cglib.proxy.Enhancer;
@@ -12,6 +13,7 @@ import org.springframework.aop.Advisor;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.aop.support.DefaultIntroductionAdvisor;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,7 +31,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  *  JDK代理 代理类和目标类必须实现同一个接口
@@ -109,6 +111,7 @@ public class AopTest {
     public void aopOriginCode() throws NoSuchMethodException {
         //定义切点
         AspectJExpressionPointcut pointcut1 = new AspectJExpressionPointcut();
+        pointcut1.getMethodMatcher();
         pointcut1.setExpression("execution(* com.zr.Target.foo())");
         System.out.println(pointcut1.matches(Target.class.getMethod("foo"), Target.class));
 
@@ -132,6 +135,7 @@ public class AopTest {
                 return false;
             }
         };
+        pointcut3.getMethodMatcher();
         System.out.println(pointcut3.matches(Target.class.getMethod("foo"), Target.class));
 
 
@@ -239,6 +243,5 @@ public class AopTest {
         System.out.println("j ==================:" + j);
 
     }
-
 
 }

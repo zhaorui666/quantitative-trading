@@ -8,7 +8,7 @@ import java.util.List;
 @Mapper
 public interface StockBaseInfoMapper {
 
-    int insert(StockBaseInfo record);
+    Integer insert(StockBaseInfo record);
 
     List<StockBaseInfo> selectAll();
 }
