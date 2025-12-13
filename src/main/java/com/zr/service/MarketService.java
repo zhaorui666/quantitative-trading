@@ -688,7 +688,8 @@ public class MarketService {
 
     }
 
-    public void selectTest() {
-        stockBaseInfoMapper.selectAll();
+    public List<StockBaseInfo> selectTest(Integer code) {
+        List<StockBaseInfo> stockBaseInfos = stockBaseInfoMapper.selectAllById(code);
+        return stockBaseInfos;
     }
 }

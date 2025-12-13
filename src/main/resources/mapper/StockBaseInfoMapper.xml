@@ -17,4 +17,9 @@
     select code, `name`, marketValue, pe
     from stock_base_info
   </select>
+
+  <select id="selectAllById" resultMap="BaseResultMap">
+    select code, `name`, marketValue, pe
+    from stock_base_info where id = #{id}
+  </select>
 </mapper>

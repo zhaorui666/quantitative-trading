@@ -2,13 +2,16 @@ package com.zr.controller;
 
 import com.zr.annotation.CurrentLimiter;
 import com.zr.constant.LimitType;
+import com.zr.pojo.StockBaseInfo;
 import com.zr.service.MarketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -49,7 +52,7 @@ public class MarketController {
     }
 
     @RequestMapping("/selectTest")
-    public void selectTest() throws IOException {
-        service.selectTest();
+    public List<StockBaseInfo> selectTest(@RequestParam Integer id) throws IOException {
+        return service.selectTest(id);
     }
 }
