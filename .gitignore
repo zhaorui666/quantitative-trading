@@ -1,27 +1,30 @@
-.metadata/
-.settings/
-classes/
-build/
-bin/
-target/
-.apt_generated/
+/target/
+!.mvn/wrapper/maven-wrapper.jar
 
-/.metadata/*
-/.settings/*
-/classes/*
-/build/*
-/bin/*
-/target/*
-/.apt_generated/*
-
+### STS ###
+.apt_generated
+.classpath
 .factorypath
-*.classpath
-*.class
-*.log
-~$*.*
 .project
-.svn
+.settings
+.springBeans
+.sts4-cache
+.gitignore
+/.mvn/
+
+### IntelliJ IDEA ###
 .idea
+*.iws
 *.iml
-*.flattened-pom.xml
-app-*.log.gz
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+/build/
+
+### VS Code ###
+.vscode/

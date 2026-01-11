@@ -4,11 +4,8 @@ import com.zr.pojo.StockFinaSta;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-@Mapper
 public interface StockFinaStaMapper {
     int deleteByPrimaryKey(@Param("code") String code, @Param("reportName") String reportName);
 

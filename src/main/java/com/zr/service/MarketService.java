@@ -2,12 +2,8 @@ package com.zr.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.zr.constant.Constants;
 import com.zr.mapper.*;
 import com.zr.pojo.*;
-import com.zr.threadService.MarketDateInsertThread;
-import com.zr.threadService.MarketDateQueryThread;
-import com.zr.util.CommonUtils;
 import com.zr.util.DateUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -15,21 +11,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -52,14 +41,19 @@ public class MarketService {
     @Autowired
     private PlateMarketMapper plateMarketMapper;
 
-    @Autowired
-    ThreadPoolExecutor executorService;
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
 
-    Logger logger = LogManager.getLogger(this.getClass());
+    Date curDate = new Date();
 
-    String curDatreStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    Calendar calendar = Calendar.getInstance();
+
+    String curDatreStr = simpleDateFormat.format(curDate);
+
+    Long time = curDate.getTime();
 
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+
+    ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     //营业收入增长
     BigDecimal totalRevenueInc = new BigDecimal("0.25");
@@ -71,28 +65,119 @@ public class MarketService {
     BigDecimal grossSellingRateInc = new BigDecimal("0.0");
 
     //资产负债率增长
-    BigDecimal assetLiabRatioInc = new BigDecimal("-0.1");
+    //BigDecimal assetLiabRatioInc = new BigDecimal("-0.1");
 
     //财务报表满足条件的往期数量
     long finaStaMeetConditionCount = 2;
 
-
-    /**
-     * 插入行情数据
-     */
-    public void insertMarketData() {
+    public void insertMarketData() throws IOException, InterruptedException {
 
         List<StockBaseInfo> stockBaseInfoList = stockBaseInfoMapper.selectAll();
 
-        //将list进行均分后并发查询入库
-        List<List<StockBaseInfo>> afterPartition = CommonUtils.averageAssign(stockBaseInfoList, Constants.CPU_COUNT * 2);
+        int count = 1;
 
-        for (List<StockBaseInfo> afterPartitionList : afterPartition) {
+        for (StockBaseInfo stockBaseInfo : stockBaseInfoList) {
 
-            MarketDateInsertThread marketDateInsertThread = new MarketDateInsertThread(afterPartitionList, stcokMarketMapper);
+            HttpGet httpGet = new HttpGet("https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=" + stockBaseInfo.getCode() + "&begin=" + time + "&period=day&type=before&count=-" + count + "&indicator=kline,pe,pb,ps,pcf,market_capital,agt,ggt,balance");
 
-            executorService.execute(marketDateInsertThread);
+            httpGet.setHeader("Cookie", "xqat=6f2a74dcaf567c87c45208248c683353242d4781;");
+
+            //Thread.currentThread().sleep(100);
+
+            CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+
+            System.out.println("响应状态码：" + statusCode);
+
+            if (statusCode == 200) {
+
+                HttpEntity httpEntity = httpResponse.getEntity();
+                // 使用指定的字符编码解析响应消息实体
+                String res = EntityUtils.toString(httpEntity, "UTF-8");
+
+                System.out.println("请求个股：" + stockBaseInfo.getCode() + ";  响应结果：" + res);
+
+                JSONObject jsonObject = JSONObject.parseObject(res);
+
+                String data = jsonObject.getString("data");
+
+                JSONObject dataJsonObject = JSONObject.parseObject(data);
+
+                String stockCode = dataJsonObject.getString("symbol");
+
+                //list 日K图数据
+                JSONArray itemJsonObject = (JSONArray) dataJsonObject.get("item");
+
+                ArrayList<StcokMarket> stockMarketList = new ArrayList();
+
+                for (int i = 0; i < itemJsonObject.size(); i++) {
+
+                    StcokMarket item = new StcokMarket();
+
+                    //每个日K图里的参数
+                    JSONArray dayArray = (JSONArray) itemJsonObject.get(i);
+
+                    //日期-时间戳
+                    String date = simpleDateFormat.format(new Date(Long.valueOf((Long) dayArray.get(0))));
+
+                    //开盘价
+                    BigDecimal beginPrice = (BigDecimal) dayArray.get(2);
+
+                    //最高价
+                    BigDecimal highestPrice = (BigDecimal) dayArray.get(3);
+
+                    //最低价
+                    BigDecimal lowestPrice = (BigDecimal) dayArray.get(4);
+
+                    //收盘价
+                    BigDecimal lastPrice = (BigDecimal) dayArray.get(5);
+
+                    //涨跌幅
+                    BigDecimal changePercent = (BigDecimal) dayArray.get(7);
+
+                    //换手率
+                    BigDecimal turnoverRate = (BigDecimal) dayArray.get(8);
+
+                    //成交额
+                    if (dayArray.get(9) instanceof Integer) {
+                        Integer transAmt = (Integer) dayArray.get(9);
+                        item.setTransamt(transAmt.toString());
+                    }
+
+                    if (dayArray.get(9) instanceof Long) {
+                        Long transAmt = (Long) dayArray.get(9);
+                        item.setTransamt(transAmt.toString());
+                    }
+
+                    if (dayArray.get(9) instanceof BigDecimal) {
+                        BigDecimal transAmt = (BigDecimal) dayArray.get(9);
+                        transAmt = transAmt.setScale(0, BigDecimal.ROUND_HALF_UP);
+                        item.setTransamt(transAmt.toString());
+                    }
+
+                    item.setCode(stockCode);
+                    item.setLastprice(lastPrice.toString());
+                    item.setChangepercent(changePercent.toString());
+                    item.setBeginprice(beginPrice.toString());
+                    item.setHighestprice(highestPrice.toString());
+                    item.setLowestprice(lowestPrice.toString());
+                    item.setTurnoverrate(turnoverRate.toString());
+                    item.setDate(date);
+
+                    if (curDatreStr.equals(date)) {
+                        stockMarketList.add(item);
+                    }
+
+                }
+
+                if (stockMarketList.size() > 0) {
+                    stcokMarketMapper.batchInsert(stockMarketList);
+                }
+
+            }
         }
+
     }
 
     public void countSingleResult() throws ParseException, ExecutionException, InterruptedException {
@@ -105,19 +190,12 @@ public class MarketService {
 
         ArrayList<String> resultLast = filterFinaCondition(result);
 
-        resultLast.forEach(s -> logger.info(s));
+        resultLast.forEach(s -> System.out.println(s));
 
-        logger.info("========计算结束========");
+        System.out.println("========计算结束========");
     }
 
-
-
-    /**
-     * 杯柄经典形态图
-     * @throws ParseException
-     * @throws ExecutionException
-     * @throws InterruptedException
-     */
+    //杯柄经典形态图
     public void countHandleOfCupResult() throws ParseException, ExecutionException, InterruptedException {
 
         //正在形成U型部分[回调幅度介于12%-15%(最高不会超过33%)]；下跌缩量、上涨放量
@@ -129,9 +207,9 @@ public class MarketService {
 
         ArrayList<String> resultLast = filterFinaCondition(result1);
 
-        resultLast.forEach(s -> logger.info(s));
+        resultLast.forEach(s -> System.out.println(s));
 
-        logger.info("========计算结束========");
+        System.out.println("========计算结束========");
 
     }
 
@@ -187,7 +265,6 @@ public class MarketService {
                         && minLastPrice.divide(maxLastPrice, 4, RoundingMode.HALF_UP).compareTo(new BigDecimal(0.88)) <= 0 && minLastPrice.divide(maxLastPrice, 4, RoundingMode.HALF_UP).compareTo(new BigDecimal(0.85)) >= 0
                         && count >= capacityIncCount
                         && marketValue > marketValueParam) {
-
                     returnList.add(item.get("code").toString() + "-" + item.get("name").toString());
                 }
 
@@ -242,8 +319,9 @@ public class MarketService {
                 //4.市值需满足大于某一值
                 if (averageChangePercent.compareTo(lowLimitParam) >= 0 && averageChangePercent.compareTo(upLimitParam) < 0
                         && marketValue > marketValueParam
-                    // && count >= capacityIncCount
-                ) {
+                       // && count >= capacityIncCount
+                )
+                {
                     returnList.add(item.get("code").toString() + "-" + item.get("name").toString());
                 }
 
@@ -270,6 +348,7 @@ public class MarketService {
         });
 
         return returnList;
+
     }
 
 
@@ -281,9 +360,9 @@ public class MarketService {
 
         for (StockBaseInfo stockBaseInfo : stockBaseInfosList) {
 
-            HttpGet httpGet = new HttpGet("https://stock.xueqiu.com/v5/stock/finance/cn/indicator.json?symbol=" + stockBaseInfo.getCode() + "&type=all&is_detail=true&count=" + count + "&timestamp=" + LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+            HttpGet httpGet = new HttpGet("https://stock.xueqiu.com/v5/stock/finance/cn/indicator.json?symbol=" + stockBaseInfo.getCode() + "&type=all&is_detail=true&count=" + count + "&timestamp=" + time);
 
-            httpGet.setHeader("Cookie", Constants.Cookie);
+            httpGet.setHeader("Cookie", "xqat=6f2a74dcaf567c87c45208248c683353242d4781;");
 
             //Thread.currentThread().sleep(100);
 
@@ -291,15 +370,14 @@ public class MarketService {
 
             int statusCode = httpResponse.getStatusLine().getStatusCode();
 
-            logger.info("响应状态码：{}", statusCode);
+            System.out.println("响应状态码：" + statusCode);
 
             if (statusCode == 200) {
-
                 HttpEntity httpEntity = httpResponse.getEntity();
                 // 使用指定的字符编码解析响应消息实体
                 String res = EntityUtils.toString(httpEntity, "UTF-8");
 
-                logger.info("请求个股财务报表数据：{};  响应结果：{}", stockBaseInfo.getCode(), res);
+                System.out.println("请求个股财务报表数据：" + stockBaseInfo.getCode() + ";  响应结果：" + res);
 
                 JSONObject jsonObject = JSONObject.parseObject(res);
 
@@ -313,8 +391,7 @@ public class MarketService {
 
                     JSONObject item = (JSONObject) list.get(i);
 
-//                    String date = simpleDateFormat.format(new Date(Long.valueOf((Long) item.get("report_date"))));
-                    String date = DateTimeFormatter.ofPattern(Constants.STANDARD_DATE_FORMAT).format(LocalDateTime.ofInstant(Instant.ofEpochMilli((Long) item.get("report_date")), ZoneId.systemDefault()));
+                    String date = simpleDateFormat.format(new Date(Long.valueOf((Long) item.get("report_date"))));
 
                     String reportName = (String) item.get("report_name");
 
@@ -417,7 +494,7 @@ public class MarketService {
 
             HttpGet httpGet = new HttpGet("https://push2his.eastmoney.com/api/qt/stock/kline/get?cb=jQuery112401976117106249089_1628907633892&secid=90." + plateInfo.getPalteCode() + "&ut=fa5fd1943c7b386f172d6893dbfba10b&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61&klt=101&fqt=0&beg=" + beg + "&end=" + curDatreStr + "&_=1628907633896");
 
-            httpGet.setHeader("Cookie", Constants.Cookie);
+            httpGet.setHeader("Cookie", "xqat=0de231800ecb3f75e824dc0a23866218ead61a8e;");
 
             //Thread.currentThread().sleep(100);
 
@@ -425,16 +502,15 @@ public class MarketService {
 
             int statusCode = httpResponse.getStatusLine().getStatusCode();
 
-            logger.info("响应状态码：{}", statusCode);
+            System.out.println("响应状态码：" + statusCode);
 
             if (statusCode == 200) {
 
                 HttpEntity httpEntity = httpResponse.getEntity();
-
                 // 使用指定的字符编码解析响应消息实体
                 String res = EntityUtils.toString(httpEntity, "UTF-8");
 
-                logger.info("请求板块：{};  响应结果：{}", plateInfo.getPalteName(), res);
+                System.out.println("请求板块：" + plateInfo.getPalteName() + ";  响应结果：" + res);
 
                 String str = res.substring(res.indexOf("{\"rc\""));
 
@@ -496,9 +572,11 @@ public class MarketService {
 
         result.retainAll(result2);
 
-        result.forEach(s -> logger.info(s));
+        for (String str : result) {
+            System.out.println(str);
+        } 
 
-        logger.info("========计算结束========");
+        System.out.println("========计算结束========");
     }
 
     private ArrayList<String> countPlateResultByCondition(String begainDate, String endDate, double lowLimit, double upLimit) {
@@ -517,9 +595,11 @@ public class MarketService {
             ArrayList<PlateMarket> list = new ArrayList<>();
 
             for (PlateMarket plateMarket : plateMarketList) {
+
                 if (plateInfo.getPalteCode().equals(plateMarket.getPlateCode())) {
                     list.add(plateMarket);
                 }
+
             }
 
             map.put("plateCode", plateInfo.getPalteCode());
@@ -553,12 +633,10 @@ public class MarketService {
         return returnList;
     }
 
-    /**
-     * 多线程查询公用方法
-     **/
+    //多线程查询公用方法
     private ArrayList<HashMap<String, Object>> selectMarketDataByThread(String begainDateParam, String endDateParam) throws ParseException, InterruptedException, ExecutionException {
 
-        LocalDate begainDate = LocalDate.parse(begainDateParam, DateTimeFormatter.ofPattern(Constants.STANDARD_DATE_FORMAT));
+        Date begainDate = simpleDateFormat.parse(begainDateParam);
 
         List<Callable<List<Map<String, Object>>>> tasks = new ArrayList<>();
 
@@ -566,7 +644,7 @@ public class MarketService {
 
         if (betweenMonth == 1) {
 
-            Callable<List<Map<String, Object>>> work = new MarketDateQueryThread(begainDateParam, endDateParam, this);
+            Callable<List<Map<String, Object>>> work = new QueryThread(begainDateParam, endDateParam, this);
 
             tasks.add(work);
 
@@ -574,17 +652,22 @@ public class MarketService {
 
             for (int i = 0; i < betweenMonth; i++) {
 
-                //工作线程当前的截止查询日期
-                LocalDate curEndStr = begainDate.plusMonths(1);
+                calendar.setTime(begainDate);
 
-                Callable<List<Map<String, Object>>> work = new MarketDateQueryThread(begainDateParam, curEndStr.format(DateTimeFormatter.ofPattern(Constants.STANDARD_DATE_FORMAT)), this);
+                calendar.add(Calendar.MONTH, 1);
+
+                //工作线程当前的截止查询日期
+                String curEndStr = simpleDateFormat.format(calendar.getTime());
+
+                Callable<List<Map<String, Object>>> work = new QueryThread(begainDateParam, curEndStr, this);
 
                 tasks.add(work);
 
                 //下一循环的起始时间
-                begainDateParam = curEndStr.format(DateTimeFormatter.ofPattern(Constants.STANDARD_DATE_FORMAT));
+                begainDateParam = curEndStr;
 
-                begainDate = LocalDate.parse(begainDateParam, DateTimeFormatter.ofPattern(Constants.STANDARD_DATE_FORMAT));
+                begainDate = simpleDateFormat.parse(begainDateParam);
+
             }
 
         }
@@ -593,7 +676,7 @@ public class MarketService {
 
         List<List<Map<String, Object>>> totalGatherList = new ArrayList<>();
 
-        if (!CollectionUtils.isEmpty(futures)) {
+        if (futures != null && futures.size() > 0) {
 
             for (Future<List<Map<String, Object>>> future : futures) {
                 totalGatherList.add(future.get());
@@ -621,6 +704,7 @@ public class MarketService {
         });
 
         return resultList;
+
     }
 
     //财务添加筛选公共方法
@@ -649,7 +733,7 @@ public class MarketService {
 
                         StockFinaSta lastFs = stockFinaStaList.remove(0);
 
-                        if (!lastFs.getReportName().equals("2021中报")) {
+                        if(!lastFs.getReportName().equals("2021中报")){
                             iterator.remove();
                             continue;
                         }
@@ -686,10 +770,5 @@ public class MarketService {
 
         return result;
 
-    }
-
-    public List<StockBaseInfo> selectTest(Integer code) {
-        List<StockBaseInfo> stockBaseInfos = stockBaseInfoMapper.selectAllById(code);
-        return stockBaseInfos;
     }
 }

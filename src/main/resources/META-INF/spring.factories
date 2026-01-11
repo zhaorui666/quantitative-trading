@@ -1,3 +1,0 @@
-#公共Dao 自动化配置服务
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.zr.compent.SpringFactoriesConfig

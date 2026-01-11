@@ -1,24 +1,18 @@
-package com.zr.threadService;
-
-import com.zr.service.MarketService;
+package com.zr.service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-/**
- *
- * 行情数据加载，从而进行处理筛选
- */
-public class MarketDateQueryThread implements  Callable<List<Map<String, Object>>>{
+public class QueryThread implements  Callable<List<Map<String, Object>>>{
 
     private MarketService marketService;
     private String begainDate;
     private String endDate;
 
-    public MarketDateQueryThread(){}
+    public QueryThread(){}
 
-    public MarketDateQueryThread(String begainDate, String endDate, MarketService marketService){
+    public QueryThread(String begainDate,String endDate,MarketService marketService){
         this.begainDate=begainDate;
         this.endDate=endDate;
         this.marketService = marketService;

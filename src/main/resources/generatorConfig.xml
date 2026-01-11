@@ -5,7 +5,7 @@
 <!-- 配置 tableName,使用 Run As Maven build 生成 dao 层 -->
 <generatorConfiguration>
     <!--数据库驱动包路径 -->
-    <classPathEntry location="E:/project/quantitative-trading/src/main/resources/mysql-connector-java-8.0.21.jar"/>
+    <classPathEntry location="/mysql-connector-java-8.0.21.jar"/>
 
     <!-- flat表示为每一张表只生成一个实体类。这个实体类包含表中的所有字段-->
     <context id="MysqlTables" targetRuntime="MyBatis3Simple" defaultModelType="flat">
@@ -37,7 +37,7 @@
         <!-- jdbc连接-->
         <jdbcConnection driverClass="com.mysql.jdbc.Driver"
                         connectionURL="jdbc:mysql://localhost:3306/test?useSSL=false" userId="root"
-                        password="root"/>
+                        password="123456"/>
 
         <!-- 类型转换 -->
         <javaTypeResolver>
